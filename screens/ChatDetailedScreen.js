@@ -9,9 +9,9 @@ const ChatDetailedScreen = ({route, navigation}) => {
   const profileImage = item.image;
   const [message, setMessage] = useState('');
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch(); //dsipatch function is provided by redux store used to send actions to the store.
 
-  const chatMessages = useSelector(state => state.chat.messages);
+  const chatMessages = useSelector(state => state.chat.messages); // state represnts the entire state redux state object . UseSelector has the access to the store's state. state.chat.messages retrieves the messages property from the chat slice.
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -24,9 +24,8 @@ const ChatDetailedScreen = ({route, navigation}) => {
   }
 
   function sendTextHandler() {
-    if (message.trim() !== '') {
-      dispatch(addChatMessage({sender: item.sender, message}));
-
+    if (message.trim() !== '') { //checks if message is not empty string after trim the leading and trailing spaces and ensures user has entered non empty content
+      dispatch(addChatMessage({sender: item.sender, message})); //dispatch function is called and action "addchatMessage" is called
       setMessage('');
     }
   }

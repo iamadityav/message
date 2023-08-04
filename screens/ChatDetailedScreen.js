@@ -2,20 +2,23 @@ import {React, useLayoutEffect, useState} from 'react';
 import {View, Text, FlatList, TextInput, Image, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useDispatch, useSelector} from 'react-redux';
-import {addChatMessage} from '../components/redux/chatSlice';
+import { addChatMessage } from '../components/redux/chatSlice';
+import { Message_Data } from '../DummyData/DummyData';
 
-const ChatDetailedScreen = ({route, navigation}) => {
-  const {item} = route.params;
-  const profileImage = item.image;
+const ChatDetailedScreen = ({ navigation}) => {
+  const chatMessages = useSelector(state => state.chat.selectedUser);
+  
+  const senderImage = chatMessages.image;// state represnts the entire state redux state object . UseSelector has the access to the store's state. state.chat.messages retrieves the messages property from the chat slice.
   const [message, setMessage] = useState('');
+  const [data, setData] = useState(chatMessages.chats);
 
-  const dispatch = useDispatch(); //dsipatch function is provided by redux store used to send actions to the store.
+  const dispatch = useDispatch(); //dispatch function is provided by redux store used to send actions to the store.
 
-  const chatMessages = useSelector(state => state.chat.messages); // state represnts the entire state redux state object . UseSelector has the access to the store's state. state.chat.messages retrieves the messages property from the chat slice.
+  console.log("Caht", chatMessages.chats);
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: item.sender,
+      title: chatMessages.sender,
     });
   }, []);
 
@@ -24,8 +27,12 @@ const ChatDetailedScreen = ({route, navigation}) => {
   }
 
   function sendTextHandler() {
-    if (message.trim() !== '') { //checks if message is not empty string after trim the leading and trailing spaces and ensures user has entered non empty content
-      dispatch(addChatMessage({sender: item.sender, message})); //dispatch function is called and action "addchatMessage" is called
+    if (message.trim() !== '') {
+      //checks if message is not empty string after trim the leading and trailing spaces and ensures user has entered non empty content
+      dispatch(addChatMessage({message }));
+      const temp = [...data];
+      setData([...temp,{reciever:message}])
+       //dispatch function is called and action "addchatMessage" is called
       setMessage('');
     }
   }
@@ -38,7 +45,7 @@ const ChatDetailedScreen = ({route, navigation}) => {
         <View style={styles.maincontainer}>
           {item.send != null ? (
             <View style={styles.sendercontainer}>
-              <Image source={profileImage} style={styles.chatImage} />
+              <Image source={senderImage} style={styles.chatImage} />
               <View style={styles.sendertextcontainer}>
                 <Text style={styles.sender}>{item.send}</Text>
               </View>
@@ -58,7 +65,7 @@ const ChatDetailedScreen = ({route, navigation}) => {
   return (
     <View style={styles.containerone}>
       <FlatList
-        data={chatMessages[item.id - 1].chats}
+        data={data}
         renderItem={renderChat}
         keyExtractor={(item, index) => `${index}`}
       />

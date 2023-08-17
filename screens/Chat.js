@@ -12,15 +12,12 @@ import {React, useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {Message_Data} from '../DummyData/DummyData';
 import {useDispatch, useSelector} from 'react-redux';
-import { setSelectedUser } from '../components/redux/chatSlice';
-
+import {setSelectedUser} from '../components/redux/chatSlice';
 
 const Chat = () => {
   const dispatch = useDispatch(); //dispatch function is provided by redux store used to send actions to the store.
 
   const chatMessages = useSelector(state => state.chat.messages);
-
-
 
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,14 +81,14 @@ const Chat = () => {
       />
       <View>
         <FlatList
-          data={chatMessages}
+          data={filteredMessageData}
           renderItem={renderAvatarItem}
           keyExtractor={item => item.id.toString()}
           horizontal
           showsHorizontalScrollIndicator={false}
         />
         <FlatList
-          data={chatMessages}
+          data={filteredMessageData}
           renderItem={renderMessageItem}
           keyExtractor={item => item.id.toString()}
         />

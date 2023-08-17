@@ -1,20 +1,27 @@
 import {React, useLayoutEffect, useState} from 'react';
-import {View, Text, FlatList, TextInput, Image, StyleSheet} from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  PermissionsAndroid,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useDispatch, useSelector} from 'react-redux';
-import { addChatMessage } from '../components/redux/chatSlice';
-import { Message_Data } from '../DummyData/DummyData';
+import {addChatMessage} from '../components/redux/chatSlice';
+import {launchCamera} from 'react-native-image-picker';
 
-const ChatDetailedScreen = ({ navigation}) => {
+const ChatDetailedScreen = ({navigation}) => {
   const chatMessages = useSelector(state => state.chat.selectedUser);
-  
-  const senderImage = chatMessages.image;// state represnts the entire state redux state object . UseSelector has the access to the store's state. state.chat.messages retrieves the messages property from the chat slice.
+
+  const senderImage = chatMessages.image; // state represnts the entire state redux state object . UseSelector has the access to the store's state. state.chat.messages retrieves the messages property from the chat slice.
   const [message, setMessage] = useState('');
   const [data, setData] = useState(chatMessages.chats);
 
   const dispatch = useDispatch(); //dispatch function is provided by redux store used to send actions to the store.
-
-  console.log("Caht", chatMessages.chats);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -22,44 +29,109 @@ const ChatDetailedScreen = ({ navigation}) => {
     });
   }, []);
 
+  const [photo, setPhoto] = useState({
+    assets: [
+      {
+        fileName: '',
+        fileSize: 75704,
+        height: 1856,
+        type: 'image/jpeg',
+        uri: '',
+        width: 1392,
+      },
+    ],
+  });
+
+  const requestCameraPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        {
+          title: 'Cool Photo App Camera Permission',
+          message:
+            'Cool Photo App needs access to your camera ' +
+            'so you can take awesome pictures.',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('You can use the camera');
+        OpenCamera();
+      } else {
+        console.log('Camera permission denied');
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+
+  const OpenCamera = async () => {
+    const result = await launchCamera({mediaType: 'photo'});
+    if (!result.didCancel) {
+    }
+    setPhoto(result);
+  };
+
   function messageInputHandler(text) {
     setMessage(text);
   }
 
   function sendTextHandler() {
-    if (message.trim() !== '') {
+    const image = photo.assets[0].uri;
+    console.log('image', image);
+    if (message.trim() !== '' || image !== ' ') {
       //checks if message is not empty string after trim the leading and trailing spaces and ensures user has entered non empty content
-      dispatch(addChatMessage({message }));
+      dispatch(addChatMessage({message: message, uri: image})); //dispatch function is called and action "addchatMessage" is called
       const temp = [...data];
-      setData([...temp,{reciever:message}])
-       //dispatch function is called and action "addchatMessage" is called
-      setMessage('');
+      setData([...temp, {reciever: {message: message, uri: image}}]);
     }
+    setMessage('');
+    setPhoto({
+      assets: [
+        {
+          fileName: '',
+          fileSize: 75704,
+          height: 1856,
+          type: 'image/jpeg',
+          uri: '',
+          width: 1392,
+        },
+      ],
+    });
   }
 
   const defaultImage = require('../images/Avatar7.jpeg');
 
   const renderChat = ({item}) => {
     return (
-      <>
-        <View style={styles.maincontainer}>
-          {item.send != null ? (
-            <View style={styles.sendercontainer}>
-              <Image source={senderImage} style={styles.chatImage} />
-              <View style={styles.sendertextcontainer}>
-                <Text style={styles.sender}>{item.send}</Text>
-              </View>
+      <View style={styles.maincontainer}>
+        {item.send != null ? (
+          <View style={styles.sendercontainer}>
+            <Image source={senderImage} style={styles.chatImage} />
+            <View style={styles.sendertextcontainer}>
+              <Text style={styles.sender}>{item.send.message}</Text>
             </View>
-          ) : null}
-
-          <View style={styles.receivercontainer}>
-            <View style={styles.receivertextContainer}>
-              <Text style={styles.receiver}>{item.reciever}</Text>
-            </View>
-            <Image source={defaultImage} style={styles.chatImage2} />
           </View>
+        ) : null}
+        <View style={styles.receivercontainer}>
+          {item.reciever.uri !== '' ? (
+            <View style={styles.receivertextContainer}>
+              <Text style={styles.receiver}>{item.reciever.message}</Text>
+              <Image
+                source={{uri: item.reciever.uri}}
+                style={styles.recieverimage}
+              />
+            </View>
+          ) : (
+            <View style={styles.receivertextContainer}>
+              <Text style={styles.receiver}>{item.reciever.message}</Text>
+            </View>
+          )}
+          <Image source={defaultImage} style={styles.chatImage2} />
         </View>
-      </>
+      </View>
     );
   };
   return (
@@ -70,7 +142,19 @@ const ChatDetailedScreen = ({ navigation}) => {
         keyExtractor={(item, index) => `${index}`}
       />
       <View style={styles.textContainer}>
-        <Icon name="camera" size={24} color="black" style={styles.cameraIcon} />
+        <TouchableOpacity
+          onPress={() => {
+            requestCameraPermission();
+          }}>
+          <View>
+            <Icon
+              name="camera"
+              size={24}
+              color="black"
+              style={styles.cameraIcon}
+            />
+          </View>
+        </TouchableOpacity>
         <TextInput
           placeholder="Start Typing..."
           style={styles.input}
@@ -191,5 +275,12 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flexDirection: 'row',
+  },
+  recieverimage: {
+    flexDirection: 'row',
+    paddingTop: 10,
+    width: '100%',
+    height: 100,
+    //borderRadius: 50,
   },
 });

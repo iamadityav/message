@@ -14,9 +14,9 @@ export const chatSlice = createSlice({
       )   
     },
     addChatMessage: (state, action) => {    //arrow function takes the current 'state' and the dispatched 'action' as arguments. Will execute when 'addChatmessage' is dispatched
-      const {message} = action.payload; // contains the data sent with action when it was dispatched. In this case, it is expected to have a 'sender' and 'message' property.
+      const {message, uri} = action.payload; // contains the data sent with action when it was dispatched. In this case, it is expected to have a 'sender' and 'message' property.
       const newMessage = {
-        reciever: message, // receiver property will be determined based on whether the first message in the 'state.message' array has the same sender as the provided 'sender'. If same the receiver will be set to the name of the sender , otherwise it willl be set to the 'sender'
+        reciever: { message : message, uri: uri } // receiver property will be determined based on whether the first message in the 'state.message' array has the same sender as the provided 'sender'. If same the receiver will be set to the name of the sender , otherwise it willl be set to the 'sender'
       };
       const chatIndex = state.messages.findIndex( //findIndex is used to search through the array in the state and find the index of an element based on a condition.
         item => item.id === state.selectedUser.id,
@@ -27,9 +27,6 @@ export const chatSlice = createSlice({
       }
     },
   },
-  // showProfilePicture: (state,action) => {
-  //   return 
-  // }
 });
 
 export const {addChatMessage,setSelectedUser} = chatSlice.actions;
